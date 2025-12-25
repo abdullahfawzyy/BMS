@@ -1,0 +1,2 @@
+gcc sources/main.c sources/auth.c sources/file_ops.c sources/account.c sources/validation.c sources/transaction.c sources/search.c -o BankSystem
+.\BankSystem.exe
