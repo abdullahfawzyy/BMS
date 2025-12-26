@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "../header.h"
+#include "../header.h" //go one step back directory to find the header file 
 Account accounts[MAX]; 
 int accountCount = 0;
 int main() {
@@ -53,7 +53,7 @@ int main() {
             case 12: deletemultiple(); break;
             case 13: quit(); break;
             default:
-                printf(RED "Invalid choice! Please enter a number from 1 to 12.\n" RESET);//if invalid choice it wil start the loop again `
+                printf(RED "please enter a number from 1 to 12.\n" RESET);//if invalid choice it wil start the loop again `
 }
     }
     return 0;

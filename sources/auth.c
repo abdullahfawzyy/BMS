@@ -1,4 +1,5 @@
-#include "../header.h"
+#include "../header.h" //go one step back directory to find the header file 
+//feature 1
 int login(){
     FILE *fp = fopen("data/users.txt", "r");// try to open the users file 
     if(fp == NULL){// check if the file opened successfully

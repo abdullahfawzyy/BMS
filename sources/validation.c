@@ -1,27 +1,22 @@
-#include "../header.h"
+#include "../header.h" //go one step back directory to find the header file 
 
-// --- Helper: Check if Account Exists ---
-// Returns the index in the array if found, or -1 if not found.
+// returns index if accout exists 
 int accountexists(const char *accNum) {
     for (int i = 0; i < accountCount; i++) {
         if (strcmp(accounts[i].acc_num, accNum) == 0) {
-            return i; // Found it at index i
+            return i; //found at index i 
         }
     }
-    return -1; // Not found
+    return -1; //not found
 }
-
-// --- Helper: Validate Email ---
-// Must contain '@' and '.'
+//search of @ or . 
 int isvalidemail(const char *email) {
     if (strchr(email, '@') && strchr(email, '.')) {
         return 1; // Valid
     }
     return 0; // Invalid
 }
-
-// --- Helper: Validate Phone ---
-// Must be digits only (and typically 11 digits for Egyptian numbers)
+//search of digits and must be of a length of 10 
 int isvalidphone(const char *phone) {
     // Check length (optional, but good for "Validate all entered data" rule)
     if (strlen(phone) < 10 || strlen(phone) > 15) return 0;
@@ -33,17 +28,14 @@ int isvalidphone(const char *phone) {
     return 1;
 }
 
-// --- Helper: Validate Number String ---
-// Ensures a string contains only digits (used for Account ID validation)
+//only contains digits 
 int isvalidnumber(const char *str) {
     for (int i = 0; i < strlen(str); i++) {
         if (!isdigit(str[i])) return 0;
     }
     return 1;
 }
-
-// --- Helper: String to Lowercase ---
-// Used for Advanced Search (Case Insensitive)
+//lowercase of non sensitive searching 
 void tolowerstring(char *str) {
     for(int i = 0; str[i]; i++){
         str[i] = tolower(str[i]);

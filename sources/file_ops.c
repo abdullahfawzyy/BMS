@@ -1,10 +1,10 @@
-#include "../header.h" //go back one directory to find the header file 
+#include "../header.h" //go one step back directory to find the header file 
 void loadaccounts() {
     FILE *fp = fopen("data/accounts.txt", "r");
-    // Corner Case 1: File Missing
+    //check if the file is missing 
     if (fp == NULL) {
         printf(RED "can not find the accounts.txt file that acts as the database\n" RESET);
-        return;
+        return; //stop here
     }
     char line[300]; // temp storage for one line
     accountCount = 0; //we will need to reset the count because if a user was recently added
@@ -15,7 +15,7 @@ void loadaccounts() {
         }
         if (strlen(line) < 5) continue; //skip empty lines
         line[strcspn(line, "\n")] = 0;// it removes the \n after every line that causes a problem with the activity text so it removes it
-        // example before we added this functionalility the activity text was "active\n"
+        //example before we added this functionalility the activity text was "active\n"
         char *token = strtok(line, ",");// get the first piece before the first comma
         //cut account number 
         if(token) strcpy(accounts[accountCount].acc_num, token);
@@ -50,6 +50,7 @@ void loadaccounts() {
     fclose(fp);
     printf(GREEN "success: Loaded %d accounts\n" RESET, accountCount);
 }
+//rewrite the text file 
 void savechanges() {
     FILE *fp = fopen("data/accounts.txt", "w"); //write mode
     if (fp == NULL) {//cannot find the file
