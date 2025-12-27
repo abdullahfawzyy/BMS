@@ -121,7 +121,20 @@ void sortbydate(){
     }
     printf(GREEN "sorted by Date Opened successfully\n" RESET);
 }
-
+//helper function to sort by status 
+void sortbystatus(){
+    for(int i = 0; i < accountCount - 1; i++){
+        for(int j = 0; j < accountCount - i - 1; j++){
+            //sorting alphabetically 
+            if(strcmp(accounts[j].status, accounts[j+1].status) > 0){
+                Account temp = accounts[j];
+                accounts[j] = accounts[j+1];
+                accounts[j+1] = temp;
+            }
+        }
+    }
+    printf(GREEN "Sorted by Status successfully.\n" RESET);
+}
 //print sorted 
 void printsorted(){
     int choice;
@@ -129,6 +142,7 @@ void printsorted(){
     printf("1. Sort by Name\n");
     printf("2. Sort by Balance\n");
     printf("3. Sort by Date Opened\n");
+    printf("4. Sort by Status\n");
     printf(YELLOW "Enter choice: " RESET);
     if (scanf("%d", &choice) != 1) {
         printf(RED "Invalid input.\n" RESET);
@@ -138,6 +152,7 @@ void printsorted(){
     if(choice == 1) sortbyname();
     else if(choice == 2) sortbybalance();
     else if(choice == 3) sortbydate();
+    else if(choice == 4) sortbystatus();
     else {
         printf(RED "Invalid choice. Printing unsorted list.\n" RESET);
     }
