@@ -68,4 +68,6 @@ int accountexists(const char *accNum); //account existance
 void tolowerstring(char *str); //to have better advanced search
 void savechanges();//saves the changes to the accoutns file by rewriting the whole file
 void savetransaction(char *accNum, char *type, double amount);//saves transactions in the file of the each user
+void reset_daily_limits();
+void wait_for_user();
 #endif

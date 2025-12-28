@@ -41,3 +41,17 @@ void tolowerstring(char *str) {
         str[i] = tolower(str[i]);
     }
 }
+void wait_for_user() {
+    printf("Press 1 to return to Main Menu\n");
+    printf("Or type 2 to Exit: ");
+    // 1. Clear the input buffer (eats up leftover 'Enter' keys from previous scans)
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+    // 2. Wait for new input
+    char input = getchar(); 
+    // 3. Logic: If they typed '0', exit. Anything else returns to menu.
+    if (input == '2') {
+        printf(RED "Exiting...\n");
+        exit(0); 
+    }
+}

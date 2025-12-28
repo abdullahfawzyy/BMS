@@ -1,40 +1,99 @@
 #include "../header.h" //go one step back directory to find the header file 
-//appends a single line to the specific user's history file
-void savetransaction(char *accNum, char *type, double amount) {
-    char filepath[100];
-    //saves in the user file name 
-    sprintf(filepath, "data/%s.txt", accNum); 
-    FILE *fp = fopen(filepath, "a");
-    if (fp == NULL) {
-        printf(RED "Error: Could not save transaction history.\n" RESET);
-        return;
+int confirm_transaction_save() {
+    char choice[50];
+    
+    while(1) {
+        printf(YELLOW "\nConfirm transaction and save? (yes/no): " RESET);
+        
+        // 1. Read input with leading space (skips previous newline)
+        scanf(" %49s", choice);
+
+        // 2. Clear buffer
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF); 
+
+        // 3. Check logic
+        if (strcmp(choice, "yes") == 0 || strcmp(choice, "Yes") == 0) {
+            savechanges();
+            return 1; 
+        } else if(strcmp(choice, "no") == 0 || strcmp(choice, "No") == 0){
+            printf(RED "Transaction cancelled. Changes discarded.\n" RESET);
+            accountCount = 0; 
+            loadaccounts(); 
+            return 0; 
+        }
+        else {
+            printf(RED "Invalid Choice. Please type 'yes' or 'no'.\n" RESET);
+        }
     }
-    //get current date for the log
+}
+// --- Helper: Maintenance Check (Run at Login) ---
+// --- Helper: Maintenance Check (Run at Login) ---
+// --- Helper: Maintenance Check (Run at Login) ---
+void reset_daily_limits() {
     time_t t = time(NULL);
     struct tm now = *localtime(&t);
-    fprintf(fp, "%s %.2f $ Date: %d-%d-%d\n", type, amount, now.tm_mday, now.tm_mon + 1, now.tm_year + 1900);
-    fclose(fp);
+    int today_day = now.tm_mday;
+    int today_month = now.tm_mon + 1;
+    int today_year = now.tm_year + 1900;
+
+    int reset_count = 0;
+
+    printf(BLUE "Performing Daily Maintenance...\n" RESET);
+
+    for (int i = 0; i < accountCount; i++) {
+        // Check if the saved date is DIFFERENT from today
+        if (accounts[i].last_trans_date.day != today_day ||
+            accounts[i].last_trans_date.month != today_month ||
+            accounts[i].last_trans_date.year != today_year) {
+            
+            // 1. Reset Limit
+            accounts[i].daily_withdrawal = 0.0;
+            
+            // 2. FORCE UPDATE DATE TO TODAY (As requested)
+            // This marks the account as "checked/reset" for the current day
+            accounts[i].last_trans_date.day = today_day;
+            accounts[i].last_trans_date.month = today_month;
+            accounts[i].last_trans_date.year = today_year;
+
+            reset_count++;
+        }
+    }
+
+    if (reset_count > 0) {
+        // Save these new dates and zero limits to the file
+        savechanges(); 
+        printf(GREEN "Maintenance Complete: Updated date & limit for %d accounts.\n" RESET, reset_count);
+    } else {
+        printf(GREEN "Maintenance Complete: All accounts are already up to date.\n" RESET);
+    }
 }
+//appends a single line to the specific user's history file
+
 //feature 10 withdraw 
 void withdraw(){
     char userid[20];
     double amount;
     int index = -1; //flag
+    reset_daily_limits();
     //get the account number first
     printf(BLUE "\nWithdraw\n" RESET);
     printf(YELLOW "enter account number: " RESET);
-    scanf("%s", userid);
+    scanf("%19s", userid);
+    
     //try to find it using helper
     index = accountexists(userid);
     if(index == -1){
         printf(RED "account not found\n" RESET);
         return ;
     }
+    
     //check activity
     if(strcmp(accounts[index].status, "inactive") == 0){
         printf(RED "you can not withdraw from an inactive account\n" RESET);
         return ; //stop the function here
     }
+    
     //take amount from the user
     printf(YELLOW "enter amount: " RESET);
     if(scanf("%lf", &amount) != 1){
@@ -42,33 +101,53 @@ void withdraw(){
         return ; //stop the function here
     }
     
+    // --- SECURITY FIX: NEGATIVE CHECK ---
+    if(amount < 0){
+        printf(RED "you cannot withdraw a negative number\n" RESET);
+        return;
+    }
+    
     //single transaction limit 
     if(amount > TRANS_LIMIT){
         printf(RED "you can not exceed %.0f per single transaction\n" RESET, TRANS_LIMIT);
         return ; //stop the function here
     }
+    
     //take care of the daily limit
     if(accounts[index].daily_withdrawal + amount > DAILY_LIMIT){
         printf(RED "you exceeded the daily limit of %.0f\n" RESET, DAILY_LIMIT);
         return ; // stop the function here
     }
+    
     //check if the user has enough to withdraw
     if(amount > accounts[index].balance){
         printf(RED "insufficient balance\n" RESET);
         return ; // stop the function here
     }
     //if it passed all the previous test now we are able to perform the withdrawal
+    
     //subtract the the amount from the user balance
     accounts[index].balance = accounts[index].balance - amount;
+    
     //add the the amount to the daily limit 
     accounts[index].daily_withdrawal = accounts[index].daily_withdrawal + amount;
-    //commit all the changes to the text file
-    savechanges();
-    //commit the changes to the specified file of that account 
-    savetransaction(userid, "Withdraw", amount);
-    //confirmation message
-    printf(GREEN "transaction successful the new balance: %.2f $\n" RESET, accounts[index].balance);
+    
+    // --- LOGIC FIX: UPDATE DATE ---
+    time_t t = time(NULL);
+    struct tm now = *localtime(&t);
+    accounts[index].last_trans_date.day = now.tm_mday;      
+    accounts[index].last_trans_date.month = now.tm_mon + 1; 
+    accounts[index].last_trans_date.year = now.tm_year + 1900;
+    
+    // --- CONFIRMATION STEP ---
+    if(confirm_transaction_save()) {
+        // Only write log if user said YES
+        savetransaction(userid, "Withdraw", amount);
+        //confirmation message
+        printf(GREEN "transaction successful the new balance: %.2f $\n" RESET, accounts[index].balance);
+    }
 }
+
 //feature 11 deposit
 void deposit(){
     char id[20];
@@ -77,7 +156,7 @@ void deposit(){
     printf(BLUE "\nDeposit\n" RESET);
     //get user number 
     printf(YELLOW "enter account number: " RESET);
-    scanf("%s", id);
+    scanf("%19s", id);
     //try to find the account 
     index = accountexists(id);
     //like the withdrawal -1 is when no account found 
@@ -98,13 +177,19 @@ void deposit(){
         printf(RED "error: max limit is %.0f $ per transaction.\n" RESET, TRANS_LIMIT);
         return ; 
     }
+    if(amount < 0){
+        printf(RED "you cannot deposit a negative number\n");
+        return;
+    }
     //after it passed all that checks it is time to add it to the balance 
     accounts[index].balance = accounts[index].balance + amount;
-    //save the changes to the accounts file 
-    savechanges();
-    //save the transactions in the specified files 
-    savetransaction(id, "Deposit", amount); 
-    printf(GREEN "transaction successful the new balance: %.2f $\n" RESET, accounts[index].balance);
+    
+    // --- CONFIRMATION STEP ---
+    if(confirm_transaction_save()) {
+        //save the transactions in the specified files 
+        savetransaction(id, "Deposit", amount); 
+        printf(GREEN "transaction successful the new balance: %.2f $\n" RESET, accounts[index].balance);
+    }
 }
 
 //feature 12 transfer 
@@ -116,9 +201,9 @@ void transfer(){
     //get info 
     printf(BLUE "\nTransfer\n" RESET);
     printf(YELLOW "enter sender account number: " RESET);
-    scanf("%s", sender_id);
+    scanf("%19s", sender_id);
     printf(YELLOW "enter receiver account number: " RESET);
-    scanf("%s", receiver_id);
+    scanf("%19s", receiver_id);
     //find both accounts first 
     sender_idx = accountexists(sender_id);
     receiver_idx = accountexists(receiver_id);
@@ -141,15 +226,21 @@ void transfer(){
         printf(RED "sender has insufficient funds.\n" RESET);
         return ;
     }
+    if(amount < 0){
+        printf(RED "you cannot transfer a negative number.\n");
+        return ;
+    }
     //do the necessary operations by reducing the amount from the sender and adding it to the receiver 
     accounts[sender_idx].balance -= amount;
     accounts[receiver_idx].balance += amount;
-    //save changes to the accounts.txt file 
-    savechanges();
-    //save the transaction in the desired files of each account 
-    savetransaction(sender_id, "Transfer Sent", amount);
-    savetransaction(receiver_id, "Transfer Received", amount);
-    printf(GREEN "transfer successful!\n" RESET);
+    
+    // --- CONFIRMATION STEP ---
+    if(confirm_transaction_save()) {
+        //save the transaction in the desired files of each account 
+        savetransaction(sender_id, "Transfer Sent", amount);
+        savetransaction(receiver_id, "Transfer Received", amount);
+        printf(GREEN "transfer successful!\n" RESET);
+    }
 }
 
 //feature 13 report 
@@ -160,7 +251,7 @@ void report(){
     int transamount = 0;
     printf(BLUE "\nAccount Report\n" RESET);
     printf(YELLOW "enter account number: " RESET);
-    scanf("%s", id);
+    scanf("%19s", id);
     // check if account exists in the file first
     int index = accountexists(id);
     if(index == -1){

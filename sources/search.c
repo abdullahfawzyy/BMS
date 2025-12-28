@@ -5,7 +5,7 @@ void queryaccount(){
     int index = -1;      // store the location of the account
     printf(BLUE "\nQuery Account Details\n" RESET);
     printf(YELLOW "enter the account number to search for: " RESET);
-    scanf("%s", id_to_find); // get the id from the user
+    scanf("%19s", id_to_find); // get the id from the user
     index = accountexists(id_to_find);//search for the account 
     if(index != -1){
         // if match is found, print all details
@@ -29,7 +29,7 @@ void advancedsearch(){
     printf(BLUE "\nAdvanced Search\n" RESET);
     printf(YELLOW "enter keyword (Name, ID, or Email): " RESET);
     //%[^\n]s allows reading strings with spaces (mohamed ali)
-    scanf(" %[^\n]s", keyword);
+    scanf(" %49[^\n]s", keyword);
     //convert keyword to lowercase for case insensitive search
     char lowerKeyword[50];
     strcpy(lowerKeyword, keyword);
@@ -101,17 +101,22 @@ void sortbydate(){
     for(int i = 0; i < accountCount - 1; i++){
         for(int j = 0; j < accountCount - i - 1; j++){
             int swap = 0;
-            //compare the years first
+            // 1. Check Year
             if(accounts[j].date_opened.year > accounts[j+1].date_opened.year){
                 swap = 1;
             }
-            //if years are equal, compare months
+            // 2. If Year is equal, Check Month
             else if(accounts[j].date_opened.year == accounts[j+1].date_opened.year && 
                     accounts[j].date_opened.month > accounts[j+1].date_opened.month){
                 swap = 1;
             }
+            // 3. If Month is ALSO equal, Check Day (NEW)
+            else if(accounts[j].date_opened.year == accounts[j+1].date_opened.year && 
+                    accounts[j].date_opened.month == accounts[j+1].date_opened.month &&
+                    accounts[j].date_opened.day > accounts[j+1].date_opened.day){
+                swap = 1;
+            }
 
-            //if the preceding account is greater/newer, swap 
             if(swap){
                 Account temp = accounts[j];
                 accounts[j] = accounts[j+1];
@@ -119,7 +124,7 @@ void sortbydate(){
             }
         }
     }
-    printf(GREEN "sorted by Date Opened successfully\n" RESET);
+    printf(GREEN "Sorted by Date Opened successfully\n" RESET);
 }
 //helper function to sort by status 
 void sortbystatus(){
@@ -164,7 +169,7 @@ void printsorted(){
         printf("E-mail         : %s\n", accounts[i].email);
         printf("Balance        : %.2f $\n", accounts[i].balance);
         printf("Mobile         : %s\n", accounts[i].mobile);
-        printf("Date Opened    : %d-%d\n", accounts[i].date_opened.month, accounts[i].date_opened.year);
+        printf("Date Opened    : %d-%d-%d\n", accounts[i].date_opened.day, accounts[i].date_opened.month, accounts[i].date_opened.year);
         printf("Status         : %s\n", accounts[i].status);
         printf("--------------------------------");
     }

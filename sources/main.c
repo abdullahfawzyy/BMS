@@ -2,21 +2,23 @@
 #include "../header.h" //go one step back directory to find the header file 
 Account accounts[MAX]; 
 int accountCount = 0;
+
 int main() {
-    // login first as a bank staff
-    // if login returns 0 stop the program to avoid non bank staff to access the system 
     if(!login()){
-        printf(RED "please double check the username and passsword\n" RESET);
-        printf(RED "access denied to the bank system\n" RESET);
+        printf(RED "Please double check the username and password\n" RESET);
+        printf(RED "Access denied to the bank system\n" RESET);
         return 1;
     }
-    printf(GREEN "Welcome Bank Staff member now you have access to the bank system\n" RESET);
-    loadaccounts();//load all accounts once logged in
-    int choice; //user choices based on the menu 
-    //main menu 
-    //while 1 "true" causes an infinite loop until the the program ends intentionally 
+
+    printf(GREEN "Welcome Bank Staff member. You have access to the bank system.\n" RESET);
+    
+    loadaccounts();
+    // Don't forget this! It ensures limits are correct on startup.
+    reset_daily_limits(); 
+
+    int choice; 
     while(1) {
-        printf(BLUE "BANK MENU\n" RESET);
+        printf(BLUE "\n------- BANK STAFF MENU -------\n" RESET);
         printf("1.  Add New Account\n");
         printf("2.  Delete Account\n");
         printf("3.  Modify Account\n");
@@ -26,19 +28,22 @@ int main() {
         printf("7.  Withdraw\n");
         printf("8.  Deposit\n");
         printf("9.  Transfer\n");
-        printf("10. Report \n");
+        printf("10. Report\n");
         printf("11. Print (Sorted)\n");
-        printf("12. Delete multiple Acccounts\n");
+        printf("12. Delete Multiple Accounts\n");
         printf("13. Quit\n");
         printf(YELLOW "Enter your choice: " RESET);
-        char garbage[100]; // used to store undesired input form the user 
+        
+        // Safe input handling
         if (scanf("%d", &choice) != 1) {
-            //if the user accidentally added a character or a string it goes to the default case 
-            scanf("%s", garbage); //read the  text and put it into the garbage variable to clear the input line and contiue 
-            //why do i need to get rid of it because if i didnt do so ill go through an infinite loop  
-            choice = 0; // reset choice to 0 so the loop continues safely
+            // Clean the buffer safely
+            int c;
+            while ((c = getchar()) != '\n' && c != EOF);
+            printf(RED "Invalid input! Please enter a number.\n" RESET);
+            choice = 0; // Set to 0 to trigger default case
         }
-         switch(choice) {
+
+        switch(choice) {
             case 1: addaccount(); break;
             case 2: deleteaccount(); break;
             case 3: modifyaccount(); break;
@@ -52,9 +57,16 @@ int main() {
             case 11: printsorted(); break;
             case 12: deletemultiple(); break;
             case 13: quit(); break;
+            case 0: break; // Handled by the if check above
             default:
-                printf(RED "please enter a number from 1 to 12.\n" RESET);//if invalid choice it wil start the loop again `
-}
-    }
+                printf(RED "Please enter a number from 1 to 13.\n" RESET);
+        }
+
+        // Only show the "Press 1 to return" prompt if a valid function ran
+        if (choice >= 1 && choice <= 12) {
+             wait_for_user();
+        }
+        
+    } // End of While Loop
     return 0;
 }
